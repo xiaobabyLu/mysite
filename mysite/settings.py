@@ -38,8 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'test1',
     'polls',
+    'TestModel',
 ]
 
 MIDDLEWARE = [
@@ -77,9 +77,17 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
 DATABASES = {
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.sqlite3',
+    #     'NAME': os.path.join(BASE_DIR, 'mydatabase'),
+    # }
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'mydatabase'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'mysite',
+        'USER': 'root',
+        'PASSWORD': '111111',
+        'HOST': 'localhost',
+        'PORT': 3306,
     }
 }
 
@@ -105,6 +113,20 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
+
+
+# SILENCED_SYSTEM_CHECKS = ['fields.E300', 'fields.E307']
+# # add user control
+# AUTH_USER_MODEL = 'polls.User'
+
+LOGIN_URL = '/polls/login/'
+# LOGOUT_REDIRECT_URL = '/'
+# LOGIN_REDIRECT_URL = '/'
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'polls.backends.EmailBackend',
+)
+
 
 LANGUAGE_CODE = 'en-us'
 
