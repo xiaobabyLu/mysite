@@ -1,28 +1,57 @@
-from django.shortcuts import render,get_object_or_404
-from django.http import HttpResponse,HttpResponseRedirect
+from django.shortcuts import render,get_object_or_404,render_to_response
+from django.http import HttpResponseRedirect,HttpResponse
 from .models import Question,Choice
-from django.template import loader
 from django.urls import reverse
 from django.views import generic
+from polls.forms import QuestionForm,UserRegisterForm,UserLoginForm
+from polls.models import User
+from django.contrib.auth.decorators import login_required
+import os
+from django.contrib import auth
 
 
-# def index(request):
-#     # return HttpResponse("Hi , You are  at the polls website!")
-#     latest_question_list = Question.objects.order_by('-pub_date')[:5]
-#     template = loader.get_template('polls/index.html')
-#     context = {'latest_question_list':latest_question_list,}
-#     return HttpResponse(template.render(context,request))
+def register(request):
+    if request.method == 'POST':
+        uf = UserRegisterForm(request.POST)
+        if uf.is_valid():
+            username = uf.cleaned_data['username']
+            password = uf.cleaned_data['password']
+            email = uf.cleaned_data['email']
 
-# def detail(request, question_id):
-#     question = get_object_or_404(Question,pk=question_id)
-#     return render(request,'polls/detail.html',{'question':question})
-#
-#
-# def results(request, question_id):
-#     question = get_object_or_404(Question,pk=question_id)
-#     return render(request,'polls/results.html',{'question':question})
-#
-#
+            user = User()
+            user.username = username
+            user.password = password
+            user.email = email
+            user.save()
+            return render_to_response('polls/register_success.html',{'username': username})
+    else:
+        uf = UserRegisterForm()
+    return render_to_response('polls/register.html',{'uf':uf})
+
+
+def login(request):
+    if request.method == 'POST':
+        uf = UserLoginForm(request.POST)
+        if uf.is_valid():
+            username = uf.cleaned_data['username']
+            password = uf.cleaned_data['password']
+            user = auth.authenticate(username__exact=username,password__exact=password)
+            if user:
+                return render_to_response('polls/login_success.html',{'username':username})
+            else:
+                return HttpResponseRedirect('/polls/login/')
+    else:
+        uf = UserLoginForm()
+    return render_to_response('polls/login.html',{'uf':uf})
+
+
+@login_required
+def logout(request):
+    auth.logout(request)
+    return HttpResponseRedirect('/polls/login/')
+
+
+@login_required
 def vote(request, question_id):
     question = get_object_or_404(Question,pk=question_id)
     try:
@@ -52,3 +81,16 @@ class ResultView(generic.DetailView):
     model = Question
     template_name = 'polls/results.html'
 
+
+@login_required
+def form_input(request):
+    if request.method == "POST":
+        form = QuestionForm(request.POST)
+        if form.is_valid():
+            Question = form.save()
+            Question.save()
+            return HttpResponseRedirect(reverse("polls:index"))
+    else:
+        form = QuestionForm()
+    FILE_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return render(request, os.path.join(FILE_ROOT, 'polls/templates/polls','input.html'),{'form':form})
